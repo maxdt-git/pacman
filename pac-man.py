@@ -1,36 +1,47 @@
 import pygame
-from sys import exit
+from sys import exit, argv
 from random import randint
-from screens import Menu
-from generator import Pacman, Ghosts, Game
-from screens import Menu, Score, Tuto
+from generator import Game, Pac, Ghosts, Run
+from screens import Menu, Score, Tuto, Pause, Over
+from parsing import check_config, extract_dict, Config
 
 
 def main():
 
     pygame.init()
+    conf = extract_dict(argv[1])
+    parsed = check_config(conf)
+    config = Config(parsed)
 
     game = Game()
-    clock = pygame.time.Clock()
-
-    walls: list[tuple[pygame.Rect, tuple[int, int, int]]] = []
-
-    pacman = Pacman(800, 800)
-    g1 = Ghosts(700, 672)
-    g2 = Ghosts(88, 672)
-    g3 = Ghosts(700, 50)
-    g4 = Ghosts(88, 50)
     menu = Menu()
     score = Score()
     tuto = Tuto()
+    pause = Pause()
+    run = Run()
+    over = Over()
+    clock = pygame.time.Clock()
+    state = "menu"
+
+    walls: list[tuple[pygame.Rect, tuple[int, int, int]]] = []
+
+    pacman = Pac(game.offset_x, game.offset_y)
+    ghost1 = Ghosts(game.offset_x, game.offset_y, game.maze)
+    ghost2 = Ghosts(game.offset_x, game.offset_y, game.maze, row=14, col=14)
+    ghost3 = Ghosts(game.offset_x, game.offset_y, game.maze, row=14, col=0)
+    ghost4 = Ghosts(game.offset_x, game.offset_y, game.maze, row=0, col=14)
+
+    first_wall = game.allcells[0][0]
+    maze_rect = first_wall.copy()
+    for cells in game.allcells:
+        for wall in cells:
+            maze_rect.union_ip(wall)
     for cell in game.allcells:
         for wall in cell:
             color = (randint(100, 255),
                      randint(100, 255),
                      randint(100, 255))
             walls.append((wall, color))
-    state = "menu"
-    speed = 0.100
 
     while True:
         for event in pygame.event.get():
@@ -38,11 +49,6 @@ def main():
                 pygame.quit()
                 exit()
             if state == "menu":
-                menu.draw_screen(game.screen)
-            # else:
-            #     game.screen.fill((0, 0, 0))
-                # game.screen.blit(game.text_surface, (50, 750))
-                menu.draw_screen(game.screen)
                 select = menu.handle_event(event, game.screen)
                 if select == "game":
                     state = "game"
@@ -53,14 +59,10 @@ def main():
                 if select == "exit":
                     state = "exit"
             if state == "score":
-                game.screen.fill("black")
-                score.draw_screen(game.screen)
                 select = score.handle_event(event)
                 if select == "menu":
                     state = "menu"
             if state == "tuto":
-                game.screen.fill("black")
-                tuto.draw_screen(game.screen)
                 select = tuto.handle_event(event)
                 if select == "menu":
                     state = "menu"
@@ -68,44 +70,71 @@ def main():
                 pygame.quit()
                 exit()
             if state == "game":
-                game.screen.fill("black")
-                game.screen.blit(game.text_surface, (50, 750))
-                for wall, color in walls:
+                game.screen.fill("black")  # erase screen
+                game.screen.blit(game.text_surface, (50, 750))  # draw score
+                for wall, color in walls:  # draw maze
                     if wall.width == wall.height:
                         pygame.draw.rect(
                             game.screen, pygame.Color(245, 223, 52, 10), wall)
                     else:
                         pygame.draw.rect(
                             game.screen, pygame.Color(color), wall)
-                        keys = pygame.key.get_pressed()
+                pygame.draw.rect(game.screen, "Red", pacman.rect)  # draw pac
+                pygame.draw.rect(game.screen, "Blue", ghost1.rect)  # draw gh
 
-                        if keys[pygame.K_LEFT] and pacman.rect.left > 0:
-                            pacman.pos_x -= speed
-                            pacman.angle = 180
+                if event.type == pygame.KEYDOWN:
+                    pacman.move(event.key, game.maze)
+                    game.screen.fill("black")
+                    game.screen.blit(game.text_surface, (50, 750))
+                    for wall, color in walls:
+                        if wall.width == wall.height:
+                            pygame.draw.rect(
+                                game.screen, pygame.Color(
+                                    245, 223, 52, 10), wall)
+                        else:
+                            pygame.draw.rect(
+                                game.screen, pygame.Color(color), wall)
+                    pygame.draw.rect(game.screen, "Red", pacman.rect)
+            if state == "over":
+                run.life = 3
+                select = over.handle_event(event)
+                if select == "menu":
+                    state = "menu"
 
-                        if keys[pygame.K_RIGHT] and pacman.rect.left < 800:
-                            pacman.pos_x += speed
-                            pacman.angle = 0
-
-                        if keys[pygame.K_UP] and pacman.rect.top > 0:
-                            pacman.pos_y -= speed
-                            pacman.angle = 90
-
-                        if keys[pygame.K_DOWN] and pacman.rect.top < 800:
-                            pacman.pos_y += speed
-                            pacman.angle = 270
-
-                        pacman.rect.topleft = (int(pacman.pos_x), int(
-                            pacman.pos_y))
-                        pacman.rot = pygame.transform.rotate(
-                            pacman.image, pacman.angle)
-                        game.screen.blit(pacman.rot, pacman.rect)
-
-                        game.screen.blit(g1.image, (g1.pos_x, g1.pos_y))
-                        game.screen.blit(g2.image, (g2.pos_x, g2.pos_y))
-                        game.screen.blit(g3.image, (g3.pos_x, g3.pos_y))
-                        game.screen.blit(g4.image, (g4.pos_x, g4.pos_y))
-
+        if state == "menu":
+            menu.draw_screen(game.screen)
+        if state == "score":
+            game.screen.fill("black")
+            score.draw_screen(game.screen)
+        if state == "tuto":
+            game.screen.fill("black")
+            tuto.draw_screen(game.screen)
+        if state == "game":
+            if run.life <= 0:
+                state = "over"
+            if pacman.check_collide(
+                    ghost1.rect, ghost2.rect, ghost3.rect, ghost4.rect):
+                run.life -= 1
+            ghost1.update(game.maze)
+            ghost2.update(game.maze)
+            ghost3.update(game.maze)
+            ghost4.update(game.maze)
+            game.screen.fill("black")  # erase screen
+            game.screen.blit(game.text_surface, (50, 750))  # draw score
+            for wall, color in walls:  # draw maze
+                if wall.width == wall.height:
+                    pygame.draw.rect(
+                        game.screen, pygame.Color(245, 223, 52, 10), wall)
+                else:
+                    pygame.draw.rect(
+                        game.screen, pygame.Color(color), wall)
+            pygame.draw.rect(game.screen, "Red", pacman.rect)  # draw pac
+            pygame.draw.rect(game.screen, "Blue", ghost1.rect)  # draw gh
+            pygame.draw.rect(game.screen, "Green", ghost2.rect)  # draw gh
+            pygame.draw.rect(game.screen, "Pink", ghost3.rect)  # draw gh
+            pygame.draw.rect(game.screen, "Purple", ghost4.rect)  # draw gh
+        if state == "over":
+            over.draw_screen(game.screen)
         clock.tick(60)
         pygame.display.update()
 

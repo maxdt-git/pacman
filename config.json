@@ -1,0 +1,62 @@
+{
+    "pacgum": 42,
+    "points_per_pacgum": 10,
+    "points_per_super_pacgum": 50,
+    "points_per_ghost": 200,
+    "seed": 42,
+    "level_max_time": 90,
+    "lives": 3,
+    "highscore_filename": "hs.json",
+    "levels": [
+        {
+            "id": 1,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 2,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 3,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 4,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 5,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 6,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 7,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 8,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 9,
+            "height": 15,
+            "width": 15
+        },
+        {
+            "id": 10,
+            "height": 15,
+            "width": 15
+        }
+    ]
+}

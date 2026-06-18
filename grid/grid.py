@@ -30,20 +30,34 @@ def draw_cell(hex: int, x: int, y: int) -> list[pygame.Rect]:
     return cell
 
 
-def draw_all(seednb: int) -> list[list[pygame.Rect]]:
+def draw_all(seednb: int) -> tuple[
+        list[list[pygame.Rect]], int, int, list[list[int]]]:
     if seednb:
         gen = MazeGenerator(seed=seednb)
     else:
         gen = MazeGenerator()
     maze = gen.maze
+
+    CELL_SIZE = 48
+    WALL_THICK = 4
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 800
+
+    maze_rows = len(maze)
+    maze_cols = len(maze[0])
+    step = CELL_SIZE - WALL_THICK
+    maze_pixel_width = CELL_SIZE + (maze_cols - 1) * step
+    maze_pixel_height = CELL_SIZE + (maze_rows - 1) * step
+    offsetx = (SCREEN_WIDTH - maze_pixel_width) // 2
+    offsety = (SCREEN_HEIGHT - maze_pixel_height) // 2
+
     grid: list[list[pygame.Rect]] = []
-    x = 70
-    y = 50
+    y = offsety
     for row in maze:
+        x = offsetx
         for cell in row:
             cur = draw_cell(cell, x, y)
             grid.append(cur)
-            x += 48 - 4
-        x -= (48 - 4) * len(row)
-        y += 48 - 4
-    return grid
+            x += step
+        y += step
+    return grid, offsetx, offsety, gen.maze
