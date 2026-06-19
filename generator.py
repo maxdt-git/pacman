@@ -152,6 +152,17 @@ class Game():
         self.text_surface = self.font.render("score", False, "White")
         self.allcells, self.offset_x, self.offset_y, self.maze = draw_all(0)
 
+    def handle_event(
+            self, event: pg.event.Event) -> str | None:
+        if event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                return "pause"
+            else:
+                return ""
+        else:
+            return ""
+
+
 
 class Run():
     def __init__(self) -> None:

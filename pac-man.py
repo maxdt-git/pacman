@@ -58,6 +58,8 @@ def main():
                     state = "tuto"
                 if select == "exit":
                     state = "exit"
+                if select == "pause":
+                    state = "pause"
             if state == "score":
                 select = score.handle_event(event)
                 if select == "menu":
@@ -69,7 +71,16 @@ def main():
             if state == "exit":
                 pygame.quit()
                 exit()
+            if state == "pause":
+                select = pause.handle_event(event, game.screen)
+                if select == "game":
+                    state = "game"
+                if select == "menu":
+                    state = "menu"
             if state == "game":
+                select = game.handle_event(event)
+                if select == "pause":
+                    state = "pause"
                 game.screen.fill("black")  # erase screen
                 game.screen.blit(game.text_surface, (50, 750))  # draw score
                 for wall, color in walls:  # draw maze
@@ -109,6 +120,9 @@ def main():
         if state == "tuto":
             game.screen.fill("black")
             tuto.draw_screen(game.screen)
+        if state == "pause":
+            game.screen.fill("black")
+            pause.draw_screen(game.screen)
         if state == "game":
             if run.life <= 0:
                 state = "over"

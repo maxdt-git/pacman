@@ -19,9 +19,9 @@ class Pause():
         opt_resume = font_opt.render("Resume game", False, self.start_colour)
         opt_exit = font_opt.render("Exit game", False, self.score_colour)
         start_rect = opt_resume.get_rect(centerx=400)
-        start_rect.y = 250
+        start_rect.y = 300
         exit_rect = opt_exit.get_rect(centerx=400)
-        exit_rect.y = 550
+        exit_rect.y = 400
         screen.blit(title, title_rect)
         screen.blit(opt_resume, start_rect)
         screen.blit(opt_exit, exit_rect)
@@ -30,7 +30,7 @@ class Pause():
             self, event: pygame.event.Event, screen: pygame.Surface
             ) -> str | None:
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_DOWN and self.pos < 2:
+            if event.key == pygame.K_DOWN and self.pos < 1:
                 self.pos += 1
                 if self.pos == 1:
                     self.start_colour = "White"
@@ -56,7 +56,7 @@ class Pause():
                 if self.pos == 0:
                     return "game"
                 elif self.pos == 1:
-                    return "exit"
+                    return "menu"
             else:
                 return ""
         else:
