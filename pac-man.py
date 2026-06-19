@@ -1,24 +1,27 @@
 import pygame
+import json
 from sys import exit, argv
 from random import randint
-from generator import Game, Pac, Ghosts, Run
+from generator import Game, Pac, Ghosts, MegaGum
 from screens import Menu, Score, Tuto, Pause, Over
-from parsing import check_config, extract_dict, Config
+from parsing import check_config, extract_config, Config
 
 
 def main():
 
     pygame.init()
-    conf = extract_dict(argv[1])
+    if len(argv) != 2:
+        print("Insert config file")
+        return
+    conf = extract_config(argv[1])
     parsed = check_config(conf)
     config = Config(parsed)
 
-    game = Game()
+    game = Game(config)
     menu = Menu()
     score = Score()
     tuto = Tuto()
     pause = Pause()
-    run = Run()
     over = Over()
     clock = pygame.time.Clock()
     state = "menu"
@@ -30,6 +33,11 @@ def main():
     ghost2 = Ghosts(game.offset_x, game.offset_y, game.maze, row=14, col=14)
     ghost3 = Ghosts(game.offset_x, game.offset_y, game.maze, row=14, col=0)
     ghost4 = Ghosts(game.offset_x, game.offset_y, game.maze, row=0, col=14)
+
+    mega_gum1 = MegaGum(game.offset_x, game.offset_y)
+    mega_gum2 = MegaGum(game.offset_x, game.offset_y, row=14, col=14)
+    mega_gum3 = MegaGum(game.offset_x, game.offset_y, row=14, col=0)
+    mega_gum4 = MegaGum(game.offset_x, game.offset_y, row=0, col=14)
 
     first_wall = game.allcells[0][0]
     maze_rect = first_wall.copy()
@@ -81,35 +89,26 @@ def main():
                 select = game.handle_event(event)
                 if select == "pause":
                     state = "pause"
-                game.screen.fill("black")  # erase screen
-                game.screen.blit(game.text_surface, (50, 750))  # draw score
-                for wall, color in walls:  # draw maze
-                    if wall.width == wall.height:
-                        pygame.draw.rect(
-                            game.screen, pygame.Color(245, 223, 52, 10), wall)
-                    else:
-                        pygame.draw.rect(
-                            game.screen, pygame.Color(color), wall)
-                pygame.draw.rect(game.screen, "Red", pacman.rect)  # draw pac
-                pygame.draw.rect(game.screen, "Blue", ghost1.rect)  # draw gh
-
                 if event.type == pygame.KEYDOWN:
                     pacman.move(event.key, game.maze)
-                    game.screen.fill("black")
-                    game.screen.blit(game.text_surface, (50, 750))
-                    for wall, color in walls:
-                        if wall.width == wall.height:
-                            pygame.draw.rect(
-                                game.screen, pygame.Color(
-                                    245, 223, 52, 10), wall)
-                        else:
-                            pygame.draw.rect(
-                                game.screen, pygame.Color(color), wall)
-                    pygame.draw.rect(game.screen, "Red", pacman.rect)
+                if game.time == 0:
+                    state = "over"
             if state == "over":
-                run.life = 3
+                game.life = 3
+                game.time = config.level_max_time
+                game.level = config.levels[0]['id']
                 select = over.handle_event(event)
                 if select == "menu":
+                    if over.text:
+                        try:
+                            with open("hs.json", "r") as f:
+                                scores = json.load(f)
+                        except Exception:
+                            scores = {}
+                        scores[over.text] = game.score
+                        with open("hs.json", "w") as f:
+                            json.dump(scores, f)
+                    over.text = ""
                     state = "menu"
 
         if state == "menu":
@@ -124,17 +123,98 @@ def main():
             game.screen.fill("black")
             pause.draw_screen(game.screen)
         if state == "game":
-            if run.life <= 0:
+            if game.life <= 0:
                 state = "over"
-            if pacman.check_collide(
-                    ghost1.rect, ghost2.rect, ghost3.rect, ghost4.rect):
-                run.life -= 1
+            #
+            # check pacman collides ghost
+            #
+            if pacman.check_collide(ghost1.rect):
+                if pacman.power:
+                    ghost1.exists = False
+                    ghost1.lastdeath = pygame.time.get_ticks()
+                elif not ghost1.collision:
+                    pacman.rect = pygame.Rect(0, 0, 0, 0)
+                    pacman.exists = False
+                    pacman.lastdeath = pygame.time.get_ticks()
+                    ghost1.collision = True
+                    game.life -= 1
+
+            else:
+                ghost1.collision = False
+
+            if pacman.check_collide(ghost2.rect):
+                if pacman.power:
+                    ghost2.exists = False
+                    ghost2.lastdeath = pygame.time.get_ticks()
+                elif not ghost2.collision:
+                    pacman.rect = pygame.Rect(0, 0, 0, 0)
+                    pacman.exists = False
+                    pacman.lastdeath = pygame.time.get_ticks()
+                    ghost2.collision = True
+                    game.life -= 1
+
+            else:
+                ghost2.collision = False
+
+            if pacman.check_collide(ghost3.rect):
+                if pacman.power:
+                    ghost3.exists = False
+                    ghost3.lastdeath = pygame.time.get_ticks()
+                elif not ghost3.collision:
+                    pacman.rect = pygame.Rect(0, 0, 0, 0)
+                    pacman.exists = False
+                    pacman.lastdeath = pygame.time.get_ticks()
+                    ghost3.collision = True
+                    game.life -= 1
+
+            else:
+                ghost3.collision = False
+
+            if pacman.check_collide(ghost4.rect):
+                if pacman.power:
+                    ghost4.exists = False
+                    ghost4.lastdeath = pygame.time.get_ticks()
+                elif not ghost4.collision:
+                    pacman.rect = pygame.Rect(0, 0, 0, 0)
+                    pacman.exists = False
+                    pacman.lastdeath = pygame.time.get_ticks()
+                    ghost4.collision = True
+                    game.life -= 1
+
+            else:
+                ghost4.collision = False
+            #
+            # check pacman eats megagum
+            #
+            if pacman.check_mega(mega_gum1.rect):
+                pacman.power_up()
+                mega_gum1.exists = False
+            if pacman.check_mega(mega_gum2.rect):
+                pacman.power_up()
+                mega_gum2.exists = False
+            if pacman.check_mega(mega_gum3.rect):
+                pacman.power_up()
+                mega_gum3.exists = False
+            if pacman.check_mega(mega_gum4.rect):
+                pacman.power_up()
+                mega_gum4.exists = False
+            #
+            # update for pac and ghost to move them or remove power up
+            #
+            pacman.update()
             ghost1.update(game.maze)
             ghost2.update(game.maze)
             ghost3.update(game.maze)
             ghost4.update(game.maze)
+            #
+            # draw screen
+            #
             game.screen.fill("black")  # erase screen
-            game.screen.blit(game.text_surface, (50, 750))  # draw score
+            game.update_s()
+            game.screen.blit(game.s_score, (50, 750))  # draw score
+            game.screen.blit(game.s_lives, (50, 25))
+            game.screen.blit(game.s_level, (600, 25))
+            game.screen.blit(game.s_time, (600, 750))
             for wall, color in walls:  # draw maze
                 if wall.width == wall.height:
                     pygame.draw.rect(
@@ -142,11 +222,40 @@ def main():
                 else:
                     pygame.draw.rect(
                         game.screen, pygame.Color(color), wall)
-            pygame.draw.rect(game.screen, "Red", pacman.rect)  # draw pac
-            pygame.draw.rect(game.screen, "Blue", ghost1.rect)  # draw gh
-            pygame.draw.rect(game.screen, "Green", ghost2.rect)  # draw gh
-            pygame.draw.rect(game.screen, "Pink", ghost3.rect)  # draw gh
-            pygame.draw.rect(game.screen, "Purple", ghost4.rect)  # draw gh
+            #
+            # draw rect
+            #
+            # pacman
+            if pacman.exists:
+                if pacman.power:
+                    pygame.draw.rect(game.screen, "Yellow", pacman.rect)
+                else:
+                    pygame.draw.rect(game.screen, "Red", pacman.rect)  # drawp
+            # ghosts
+            if ghost1.exists:
+                pygame.draw.rect(game.screen, "Blue", ghost1.rect)  # draw gh
+            if ghost2.exists:
+                pygame.draw.rect(game.screen, "Green", ghost2.rect)  # draw gh
+            if ghost3.exists:
+                pygame.draw.rect(game.screen, "Pink", ghost3.rect)  # draw gh
+            if ghost4.exists:
+                pygame.draw.rect(game.screen, "Purple", ghost4.rect)  # draw gh
+            #  megagum
+            if mega_gum1.exists:
+                pygame.draw.circle(
+                    game.screen, "White", mega_gum1.rect.center, 6)
+            if mega_gum2.exists:
+                pygame.draw.circle(
+                    game.screen, "White", mega_gum2.rect.center, 6)
+            if mega_gum3.exists:
+                pygame.draw.circle(
+                    game.screen, "White", mega_gum3.rect.center, 6)
+            if mega_gum4.exists:
+                pygame.draw.circle(
+                    game.screen, "White", mega_gum4.rect.center, 6)
+            game.time -= 0.017
+            if game.time < 0:
+                state = "over"
         if state == "over":
             over.draw_screen(game.screen)
         clock.tick(60)

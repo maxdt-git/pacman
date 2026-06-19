@@ -17,7 +17,8 @@ class Pause():
         title_rect.y = 150
         font_opt = pygame.font.Font("fonts/Pixeltype.ttf", 80)
         opt_resume = font_opt.render("Resume game", False, self.start_colour)
-        opt_exit = font_opt.render("Exit game", False, self.score_colour)
+        opt_exit = font_opt.render("Return to the main menu",
+                                   False, self.score_colour)
         start_rect = opt_resume.get_rect(centerx=400)
         start_rect.y = 300
         exit_rect = opt_exit.get_rect(centerx=400)

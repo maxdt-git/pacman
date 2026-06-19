@@ -3,7 +3,7 @@ from typing import Any
 from parsing import DefaultConfig
 
 
-def extract_dict(jsonfile: str) -> dict[str, Any] | None:
+def extract_config(jsonfile: str) -> dict[str, Any] | None:
     try:
         with open(jsonfile, "r") as file:
             return json.load(file)

@@ -9,4 +9,5 @@ needs to reset life or something, maybe re-init Game() instance
 - make pacman respawn when hit with one less life
 - make gums and mega-gums / increase score when eaten
 - change ghosts behaviour when near pacman
-- change ghosts and collisions behaviors when eating mega-gum 
+- change ghosts and collisions behaviors when eating mega-gum
+- when back to menu - restart game and restart name in gameover screen

@@ -1,6 +1,7 @@
 import pygame as pg
 from grid import draw_all
 import random
+from parsing import Config
 
 
 # class Pacman():
@@ -15,16 +16,35 @@ import random
 #         self.angle = 0
 #         self.rot = pg.transform.rotate(self.image, self.angle)
 
+class MegaGum():
+    CELL_SIZE = 48
+    WALL_THICK = 4
+    STEP = CELL_SIZE - WALL_THICK
+    GUM_SIZE = 8
+
+    def __init__(
+            self, offset_x: int, offset_y: int,
+            row: int = 0, col: int = 0) -> None:
+        self.row = row
+        self.col = col
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.rect = self.create()
+        self.exists = True
+
+    def create(self) -> pg.Rect:
+        x = self.offset_x + self.col * self.STEP + self.CELL_SIZE // 2
+        y = self.offset_y + self.row * self.STEP + self.CELL_SIZE // 2
+        rect = pg.Rect(0, 0, self.GUM_SIZE, self.GUM_SIZE)
+        rect.center = (x, y)
+        return rect
+
 
 class Ghosts():
     CELL_SIZE = 48
     WALL_THICK = 4
     STEP = CELL_SIZE - WALL_THICK
     PAC_SIZE = 20
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 800
-    MAZE_ROWS = 15
-    MAZE_COLS = 15
     NORTH = 1
     EAST = 2
     SOUTH = 4
@@ -33,6 +53,8 @@ class Ghosts():
     def __init__(
             self, offset_x: int, offset_y: int, maze: list[
                 list[int]], row: int = 0, col: int = 0) -> None:
+        self.base_row = row
+        self.base_col = col
         self.row = row
         self.col = col
         self.offset_x = offset_x
@@ -40,6 +62,9 @@ class Ghosts():
         self.lastmove = pg.time.get_ticks()
         self.rect = self.create()
         self.direction = self.chose_direction(maze)
+        self.lastdeath = 0
+        self.exists = True
+        self.collision = False
 
     def chose_direction(self, maze: list[list[int]]) -> str:
         available: list[str] = []
@@ -59,10 +84,22 @@ class Ghosts():
         if time - self.lastmove >= 500:
             self.move(maze)
             self.lastmove = time
+        if not self.exists and time - self.lastdeath >= 2500:
+            self.rect = self.recreate()
+            self.row = self.base_row
+            self.col = self.base_col
+            self.exists = True
 
     def create(self) -> pg.Rect:
         x = self.offset_x + self.col * self.STEP + self.CELL_SIZE // 2
         y = self.offset_y + self.row * self.STEP + self.CELL_SIZE // 2
+        rect = pg.Rect(0, 0, self.PAC_SIZE, self.PAC_SIZE)
+        rect.center = (x, y)
+        return rect
+
+    def recreate(self) -> pg.Rect:
+        x = self.offset_x + self.base_col * self.STEP + self.CELL_SIZE // 2
+        y = self.offset_y + self.base_row * self.STEP + self.CELL_SIZE // 2
         rect = pg.Rect(0, 0, self.PAC_SIZE, self.PAC_SIZE)
         rect.center = (x, y)
         return rect
@@ -108,14 +145,43 @@ class Pac():
 
     def __init__(self, offset_x: int, offset_y: int) -> None:
         self.row = self.MAZE_ROWS // 2
+        self.base_row = self.MAZE_ROWS // 2
         self.col = self.MAZE_COLS // 2
+        self.base_col = self.MAZE_COLS // 2
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.rect = self.create(self.row, self.col)
+        self.timer = 0
+        self.power = False
+        self.exists = True
+        self.lastdeath = 0
+
+    def update(self) -> None:
+        time = pg.time.get_ticks()
+        if self.power:
+            time = pg.time.get_ticks()
+            if time - self.timer >= 5000:
+                self.power = False
+        if not self.exists and time - self.lastdeath >= 2500:
+            self.rect = self.recreate()
+            self.row = self.base_row
+            self.col = self.base_col
+            self.exists = True
+
+    def power_up(self) -> None:
+        self.timer = pg.time.get_ticks()
+        self.power = True
 
     def create(self, row: int, col: int) -> pg.Rect:
         x = self.offset_x + col * self.STEP + self.CELL_SIZE // 2
         y = self.offset_y + row * self.STEP + self.CELL_SIZE // 2
+        rect = pg.Rect(0, 0, self.PAC_SIZE, self.PAC_SIZE)
+        rect.center = (x, y)
+        return rect
+
+    def recreate(self) -> pg.Rect:
+        x = self.offset_x + self.base_col * self.STEP + self.CELL_SIZE // 2
+        y = self.offset_y + self.base_row * self.STEP + self.CELL_SIZE // 2
         rect = pg.Rect(0, 0, self.PAC_SIZE, self.PAC_SIZE)
         rect.center = (x, y)
         return rect
@@ -131,26 +197,39 @@ class Pac():
             self.col -= 1
         self.rect = self.create(self.row, self.col)
 
+    def check_mega(self, m1: pg.Rect) -> bool:
+        if self.rect.colliderect(m1):
+            return True
+        return False
+
     def check_collide(
-            self, g1: pg.Rect, g2: pg.Rect, g3: pg.Rect, g4: pg.Rect) -> bool:
+            self, g1: pg.Rect) -> bool:
         if self.rect.colliderect(g1):
-            return True
-        if self.rect.colliderect(g2):
-            return True
-        if self.rect.colliderect(g3):
-            return True
-        if self.rect.colliderect(g4):
             return True
         return False
 
 
 class Game():
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         self.screen = pg.display.set_mode((800, 800))
         self.name = pg.display.set_caption("Pac-Man")
         self.font = pg.font.Font("fonts/Pixeltype.ttf", 50)
-        self.text_surface = self.font.render("score", False, "White")
+        self.score = 0
+        self.life: int = config.lives
+        self.level = config.levels[0]['id']
+        self.time = config.level_max_time
+        self.s_score = self.font.render(f"Score: {self.score}", False, "White")
+        self.s_lives = self.font.render(f"Lives: {self.life}", False, "White")
+        self.s_level = self.font.render(f"Level: {self.level}", False, "White")
+        self.s_time = self.font.render(
+            f"Time: {round(self.time, 2)}", False, "White")
         self.allcells, self.offset_x, self.offset_y, self.maze = draw_all(0)
+
+    def update_s(self) -> None:
+        self.s_score = self.font.render(f"Score: {self.score}", False, "White")
+        self.s_lives = self.font.render(f"Lives: {self.life}", False, "White")
+        self.s_time = self.font.render(
+            f"Time: {round(self.time, 2)}", False, "White")
 
     def handle_event(
             self, event: pg.event.Event) -> str | None:
@@ -161,10 +240,3 @@ class Game():
                 return ""
         else:
             return ""
-
-
-
-class Run():
-    def __init__(self) -> None:
-        self.life = 3
-        self.score = 0
