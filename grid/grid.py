@@ -1,8 +1,17 @@
 import pygame
-from mazegenerator.mazegenerator import MazeGenerator  # type: ignore
+from mazegenerator.mazegenerator import MazeGenerator
 
 
 def draw_cell(hex: int, x: int, y: int) -> list[pygame.Rect]:
+    """
+    Draw a cell, wall by wall using the binary of the number of the cell,
+    0101 = WestSouthEastNorth, 1 is a close wall and 0 an open
+
+    Arguments:
+    hex -- value of the cell
+    x -- width pos
+    y -- height pos
+    """
     NORTH = 1
     EAST = 2
     SOUTH = 4
@@ -11,27 +20,34 @@ def draw_cell(hex: int, x: int, y: int) -> list[pygame.Rect]:
     WALL_THICK = 4
     cell: list[pygame.Rect] = []
     if hex == 15:
-        rectry: pygame.Rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
-        cell.append(rectry)
+        rectry0: pygame.Rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
+        cell.append(rectry0)
     if hex & NORTH:
-        rectry: pygame.Rect = pygame.Rect(x, y, CELL_SIZE, WALL_THICK)
-        cell.append(rectry)
+        rectry1: pygame.Rect = pygame.Rect(x, y, CELL_SIZE, WALL_THICK)
+        cell.append(rectry1)
     if hex & EAST:
-        rectry: pygame.Rect = pygame.Rect(
+        rectry2: pygame.Rect = pygame.Rect(
             x + CELL_SIZE - WALL_THICK, y, WALL_THICK, CELL_SIZE)
-        cell.append(rectry)
+        cell.append(rectry2)
     if hex & SOUTH:
-        rectry: pygame.Rect = pygame.Rect(
+        rectry3: pygame.Rect = pygame.Rect(
             x, y + CELL_SIZE - WALL_THICK, CELL_SIZE, WALL_THICK)
-        cell.append(rectry)
+        cell.append(rectry3)
     if hex & WEST:
-        rectry: pygame.Rect = pygame.Rect(x, y, WALL_THICK, CELL_SIZE)
-        cell.append(rectry)
+        rectry4: pygame.Rect = pygame.Rect(x, y, WALL_THICK, CELL_SIZE)
+        cell.append(rectry4)
     return cell
 
 
 def draw_all(seednb: int) -> tuple[
         list[list[pygame.Rect]], int, int, list[list[int]]]:
+    """
+    Draw all the maze and returns a tuple of the grid, distance between the
+    window and the maze (x and y), and the maze generated in list[list[int]]
+
+    Arguments:
+    seednb -- define the seed of the maze
+    """
     if seednb:
         gen = MazeGenerator(seed=seednb)
     else:
@@ -61,3 +77,24 @@ def draw_all(seednb: int) -> tuple[
             x += step
         y += step
     return grid, offsetx, offsety, gen.maze
+
+
+def open_cells(maze: list[list[int]]) -> list[tuple[int, int]]:
+    """
+    Find the cell of the maze we can use to place the pacgums
+
+    Arguments:
+    maze -- the generated maze, in list[[list[int]] version
+    """
+    pos_list: list[tuple[int, int]] = []
+    for i in range(len(maze[0])):
+        for j in range(len(maze[0])):
+            if not maze[i][j] == 15:
+                if (i == 0 and j == 0) or (
+                    i == 0 and j == 14) or (
+                        i == 14 and j == 0) or (
+                            i == 14 and j == 14):
+                    continue
+                cell = (i, j)
+                pos_list.append(cell)
+    return pos_list

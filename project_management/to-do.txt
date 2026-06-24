@@ -1,0 +1,20 @@
+# Bugs
+- if ghosts enter a 13, 4, 13 corridor, they cant get out.
+try to make ghosts change direction when crossing a different corridor instead of a wall.
+- when nb of life is 0, game over screen shows but if start game again,
+needs to reset life or something, maybe re-init Game() instance
+- fix the parsing with levels
+
+# To-Do
+- create all the classes for each screen (gameover, menu, pause, tuto, victory
+and score) with methods, create, display and handle behavior
+- handle input method in pygame
+- create the classes for pacgum, megagum, ghosts and game with all their methods
+- use the config file to setup base config of the game
+- change ghosts behaviour when near pacman
+- change ghosts behaviors when eating mega-gum
+- when back to menu - restart game and restart name in gameover screen
+- put the level in the game for the avancement
+- check all the parsing
+- check make lint
+- how to use the package

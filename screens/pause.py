@@ -1,8 +1,17 @@
 import pygame
+from path_mgmt import font_path
 
 
 class Pause():
+    """
+    Create the pause screen where we can either to resume or to
+    go back to main menu, and draw the pause screen
+    """
     def __init__(self) -> None:
+        """
+        Init the base color of the screen
+        The cursor is be pink and the other white
+        """
         self.start_colour = "Pink"
         self.score_colour = "White"
         self.tuto_colour = "White"
@@ -10,12 +19,19 @@ class Pause():
         self.pos = 0
 
     def draw_screen(self, screen: pygame.Surface) -> None:
+        """
+        Draw the pause screen with the 2 options, resume the game or
+        go back to main menu
+
+        Arguments:
+        screen -- The surface we will draw on
+        """
         screen.fill("black")
-        font = pygame.font.Font("fonts/Pixeltype.ttf", 100)
+        font = pygame.font.Font(font_path, 100)
         title = font.render("Pause", False, "Yellow")
         title_rect = title.get_rect(centerx=400)
         title_rect.y = 150
-        font_opt = pygame.font.Font("fonts/Pixeltype.ttf", 80)
+        font_opt = pygame.font.Font(font_path, 80)
         opt_resume = font_opt.render("Resume game", False, self.start_colour)
         opt_exit = font_opt.render("Return to the main menu",
                                    False, self.score_colour)
@@ -30,6 +46,14 @@ class Pause():
     def handle_event(
             self, event: pygame.event.Event, screen: pygame.Surface
             ) -> str | None:
+        """
+        Handle the event when the player is on the pause screen, permit to
+        navigate through it and chose an option
+
+        Arguments:
+        event -- event of the game, the key we press
+        screen -- the surface where the pause screen is draw
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN and self.pos < 1:
                 self.pos += 1
@@ -62,3 +86,4 @@ class Pause():
                 return ""
         else:
             return ""
+        return ""
