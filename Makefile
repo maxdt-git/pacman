@@ -4,9 +4,6 @@ MAIN = pac-man.py
 venv:
 	python3 -m venv pacman_venv
 
-src:
-	source pacman_venv/bin/activate
-
 install: venv
 	pacman_venv/bin/pip install mazegenerator-00001-py3-none-any.whl
 	pacman_venv/bin/pip install -r requirements.txt
@@ -32,4 +29,8 @@ package:
 del-pack:
 	rm -rf dist build pac-man.spec
 
-.PHONY: venv install run debug clean lint lint-strict
+zip:
+	cd dist
+	zip -r ../pac-man-linux.zip pac-man/
+
+.PHONY: venv install run debug clean lint lint-strict del-pack zip

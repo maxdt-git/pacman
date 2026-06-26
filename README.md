@@ -38,6 +38,9 @@ The program takes exactly one argument: a JSON configuration file.
 | `make debug` | Run with Python's built-in debugger (pdb) |
 | `make lint` | Run flake8 + mypy |
 | `make clean` | Remove `__pycache__` and `.mypy_cache` |
+| `make package` | create a new game package |
+| `make del-pack` | Remove all the file created with make package |
+| `make zip` | zip the package so we can import it |
 
 ## Controls
 
@@ -144,11 +147,11 @@ The main loop is a state machine with states: `menu`, `game`, `pause`, `score`, 
 
 ## Project Management
 
-Project management documents (timeline, task tracking, risk analysis, team organization) are available in the [`project_management/`](project_management/) directory.
+Project management documents task tracking, team organization are available in the [`project_management/`](project_management/) directory.
 
 ## Resources
 
 - [Pygame documentation](https://www.pygame.org/docs/)
 - [Original Pac-Man ghost AI](https://www.gamedeveloper.com/design/the-pac-man-dossier)
 
-**AI usage:** Claude Code (claude-sonnet-4-6) was used to help write this README. Game logic, architecture, and all Python code were written by the team. AI was not used to generate functional code. All AI-assisted content was reviewed and validated by both team members.
+**AI usage:** Claude Code was used to help write this README. Game logic, architecture, and all Python code were written by the team. AI was not used to generate functional code. All AI-assisted content was reviewed and validated by both team members.
