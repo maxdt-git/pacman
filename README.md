@@ -2,6 +2,13 @@
 
 # Pac-Man
 
+**Stack:** Python · Pygame · PyInstaller
+
+**Highlights**
+- Full game: 10 levels, procedurally generated mazes, highscores, menus, pause and tutorial screens
+- Ghost AI switching between chase, flee and wander behaviours
+- Packaged as a standalone executable with PyInstaller
+
 ## Description
 
 A complete recreation of the classic Pac-Man arcade game built in Python with Pygame. Navigate through procedurally generated mazes, eat pacgums, avoid (or hunt) ghosts, and beat your highscore across 10 levels of increasing difficulty.
