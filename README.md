@@ -1,5 +1,3 @@
-*This activity has been created as part of the 42 curriculum by mde-nas, mmonnier.*
-
 # Pac-Man
 
 **Stack:** Python · Pygame · PyInstaller
